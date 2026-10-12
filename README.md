@@ -24,6 +24,16 @@ code-navigation/
 - **As a skill** (`~/.claude/skills/code-navigation/`) — teaches Claude how to navigate codebases
 - **As a CLI** (`./code-navigate.sh`) — deterministic tools you can run directly
 
+## What this is (and isn't)
+
+| ✅ does | ❌ doesn't |
+|---|---|
+| Fast CLI queries (`symbol`, `refs`, `search`) | Render HTML diagrams (use archify) |
+| Symbol indexing (ctags) | Interactive visualization |
+| Dependency analysis | Architecture drawing |
+| Drift detection | UI components |
+| Structured JSON output | Diagram theming |
+
 ## Install
 
 ```bash
@@ -97,6 +107,15 @@ All outputs go to `<project>/.navigate/output/`:
 Directory names produce ugly diagrams (`server/`, `apps/`, `internal/`). The AI step names components by **role** ("API Gateway", "Auth Service") and labels connections by **what flows** ("HTTP/WebSocket", "SQL queries"). This is what separates a code map from an architecture diagram.
 
 See `references/archify-guide.md` for the complete design guide.
+
+## Why this over raw grep?
+
+| Task | `grep` | `code-navigate` |
+|------|--------|-----------------|
+| Find definition | Scans all files | Instant (ctags index) |
+| Find references | May miss contexts | Structured search |
+| Understand structure | Manual | `summary` + `tree` |
+| AST analysis | Not possible | tree-sitter |
 
 ## Requirements
 
