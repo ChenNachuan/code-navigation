@@ -3,6 +3,7 @@
 
 import sys
 import json
+import hashlib
 from pathlib import Path
 from project_data import build_project_data
 
@@ -11,13 +12,19 @@ def detect_drift(root: str):
     root_path = Path(root).resolve()
     cache_dir = Path.home() / '.cache' / 'code-navigate'
     cache_dir.mkdir(parents=True, exist_ok=True)
-    state_file = cache_dir / (root_path.name + '.state.json')
+    # Key on the full resolved path so two projects sharing a basename don't collide.
+    path_key = hashlib.sha256(str(root_path).encode()).hexdigest()[:16]
+    state_file = cache_dir / f"{root_path.name}-{path_key}.state.json"
 
     # Load previous state
     old_state = {}
     if state_file.exists():
-        old_state = json.loads(state_file.read_text())
-        print(f"Loaded previous state: {len(old_state.get('modules', []))} modules tracked")
+        try:
+            old_state = json.loads(state_file.read_text())
+            print(f"Loaded previous state: {len(old_state.get('modules', []))} modules tracked")
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"State file unreadable ({e}) — starting fresh")
+            old_state = {}
     else:
         print("No previous state found — will create initial snapshot")
 

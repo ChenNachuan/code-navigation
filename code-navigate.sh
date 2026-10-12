@@ -28,7 +28,7 @@ case "${1:-help}" in
     PATTERN="${2:?Pattern required}"
     DIR="${3:-.}"
     echo "=== Full-text search: $PATTERN ==="
-    grep -rn --include="*.py" --include="*.js" --include="*.ts" --include="*.go" --include="*.rs" --include="*.java" --include="*.c" --include="*.cpp" --include="*.h" "$PATTERN" "$DIR" 2>/dev/null | head -50
+    grep -rn --include="*.py" --include="*.js" --include="*.ts" --include="*.go" --include="*.rs" --include="*.java" --include="*.c" --include="*.cpp" --include="*.h" "$PATTERN" "$DIR" 2>/dev/null | head -50 || true
     ;;
 
   symbol)
@@ -39,14 +39,14 @@ case "${1:-help}" in
       exit 1
     fi
     echo "=== Symbol definition: $NAME ==="
-    grep -n "$NAME" tags | head -20
+    grep -n "$NAME" tags | head -20 || true
     ;;
 
   refs)
     NAME="${2:?Symbol name required}"
     DIR="${3:-.}"
     echo "=== References to: $NAME ==="
-    grep -rn --include="*.py" --include="*.js" --include="*.ts" --include="*.go" --include="*.rs" --include="*.java" --include="*.c" --include="*.cpp" --include="*.h" "$NAME" "$DIR" 2>/dev/null | head -30
+    grep -rn --include="*.py" --include="*.js" --include="*.ts" --include="*.go" --include="*.rs" --include="*.java" --include="*.c" --include="*.cpp" --include="*.h" "$NAME" "$DIR" 2>/dev/null | head -30 || true
     ;;
 
   ast)
@@ -54,18 +54,19 @@ case "${1:-help}" in
     echo "=== AST for: $FILE ==="
     if [[ "$FILE" == *.py ]]; then
       python3 -c "
+import sys
 import tree_sitter_python as tspython
 from tree_sitter import Language, Parser
 PY_LANGUAGE = Language(tspython.language())
 parser = Parser(PY_LANGUAGE)
-with open('$FILE', 'rb') as f:
+with open(sys.argv[1], 'rb') as f:
     tree = parser.parse(f.read())
 def walk(node, indent=0):
     print('  ' * indent + f'{node.type} [{node.start_point[0]}:{node.start_point[1]}]')
     for child in node.children:
         walk(child, indent + 1)
 walk(tree.root_node)
-" 2>/dev/null || echo "Install: pip install tree-sitter-python"
+" "$FILE" 2>/dev/null || echo "Install: pip install tree-sitter-python"
     else
       tree-sitter parse "$FILE" 2>/dev/null | head -50 || echo "tree-sitter not available for this file type"
     fi
@@ -76,10 +77,10 @@ walk(tree.root_node)
     echo "=== Project Summary: $DIR ==="
     echo ""
     echo "--- Language breakdown ---"
-    find "$DIR" -type f -not -path '*/.*' -not -path '*/node_modules*' -not -path '*/__pycache__*' | sed 's/.*\.//' | sort | uniq -c | sort -rn | head -15
+    find "$DIR" -type f -not -path '*/.*' -not -path '*/node_modules*' -not -path '*/__pycache__*' | sed 's/.*\.//' | sort | uniq -c | sort -rn | head -15 || true
     echo ""
     echo "--- Structure (depth 2) ---"
-    find "$DIR" -maxdepth 2 -type d -not -path '*/.*' -not -path '*/node_modules*' | head -30
+    find "$DIR" -maxdepth 2 -type d -not -path '*/.*' -not -path '*/node_modules*' | head -30 || true
     echo ""
     echo "--- Code size ---"
     find "$DIR" -type f -not -path '*/.*' -not -path '*/node_modules*' -not -path '*/__pycache__*' | wc -l | xargs echo "Total files:"
@@ -87,7 +88,7 @@ walk(tree.root_node)
 
   tree)
     DIR="${2:-.}"
-    find "$DIR" -not -path '*/\.*' -not -path '*/node_modules*' -not -path '*/__pycache__*' | head -100
+    find "$DIR" -not -path '*/\.*' -not -path '*/node_modules*' -not -path '*/__pycache__*' | head -100 || true
     ;;
 
   data)

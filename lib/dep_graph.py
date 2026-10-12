@@ -17,12 +17,15 @@ def analyze_deps(root: str):
 
     for m in modules:
         for imp in m['imports']:
+            imp_path = imp.replace('.', '/')
+            last_seg = imp_path.split('/')[-1]
             for other in modules:
-                imp_path = imp.replace('.', '/')
+                mod_path = str(Path(other['path']).with_suffix(''))
                 # Exact match or path-boundary match (avoid partial name collisions)
-                if (imp_path in other['path'] or
-                    other['path'].startswith(imp_path + '/') or
-                    other['path'].startswith(imp_path + '.')):
+                if (mod_path == imp_path or
+                    mod_path.startswith(imp_path + '/') or
+                    mod_path.endswith('/' + imp_path) or
+                    Path(other['path']).stem == last_seg):
                     dep_map[m['path']].append(other['path'])
                     reverse_dep[other['path']].append(m['path'])
                     break

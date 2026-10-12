@@ -59,8 +59,18 @@ def to_archify_mechanical(data: dict, output_html: str) -> dict:
         for m in mods:
             for imp in m['imports'][:5]:
                 imp_clean = imp.replace('.', '/').replace('github.com/', '').replace('gitlab.com/', '')
-                for other_name in dir_groups:
+                last_seg = imp_clean.split('/')[-1]
+                for other_name, other_mods in dir_groups.items():
                     if other_name == comp_name:
+                        continue
+                    # Only connect if the import actually resolves into that directory.
+                    hit = any(
+                        (str(Path(om['path']).with_suffix('')) == imp_clean or
+                         str(Path(om['path']).with_suffix('')).endswith('/' + imp_clean) or
+                         Path(om['path']).stem == last_seg)
+                        for om in other_mods
+                    )
+                    if not hit:
                         continue
                     other_id = other_name.lower().replace(' ', '_').replace('.', '_').replace('-', '_')
                     edge = (src_id, other_id)
